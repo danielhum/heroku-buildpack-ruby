@@ -10,13 +10,14 @@ module LanguagePack
   end
 
   def self.gemfile_lock(app_path: )
-    path = app_path.join("Gemfile.lock")
+    gemfile = LanguagePack::ShellHelpers.user_env_hash["BUNDLE_GEMFILE"] || "Gemfile"
+    path = app_path.join("#{gemfile}.lock")
     if path.exist?
       LanguagePack::Helpers::GemfileLock.new(
         contents: path.read
       )
     else
-      raise BuildpackError.new("Gemfile.lock required. Please check it in.")
+      raise BuildpackError.new("#{path.basename} required. Please check it in.")
     end
   end
 

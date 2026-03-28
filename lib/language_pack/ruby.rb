@@ -22,8 +22,18 @@ class LanguagePack::Ruby < LanguagePack::Base
     File.exist?("Gemfile")
   end
 
+  def self.gemfile_name
+    LanguagePack::ShellHelpers.user_env_hash["BUNDLE_GEMFILE"] || "Gemfile"
+  end
+
+  def gemfile_name
+    self.class.gemfile_name
+  end
+
   def self.bundler
-    @@bundler ||= LanguagePack::Helpers::BundlerWrapper.new.install
+    @@bundler ||= LanguagePack::Helpers::BundlerWrapper.new(
+      gemfile_path: Pathname.new("./#{gemfile_name}")
+    ).install
   end
 
   def bundler
@@ -363,6 +373,7 @@ private
     set_export_default "BUNDLE_WITHOUT", ENV["BUNDLE_WITHOUT"]
     set_export_default "BUNDLE_BIN", ENV["BUNDLE_BIN"]
     set_export_default "BUNDLE_GLOBAL_PATH_APPENDS_RUBY_SCOPE", ENV["BUNDLE_GLOBAL_PATH_APPENDS_RUBY_SCOPE"]
+    set_export_default "BUNDLE_GEMFILE", env("BUNDLE_GEMFILE") if env("BUNDLE_GEMFILE")
     set_export_default "BUNDLE_DEPLOYMENT", ENV["BUNDLE_DEPLOYMENT"] # Unset on windows since we delete the Gemfile.lock
   end
 
@@ -400,6 +411,7 @@ private
     set_env_default "BUNDLE_PATH", ENV["BUNDLE_PATH"]
     set_env_default "BUNDLE_WITHOUT", ENV["BUNDLE_WITHOUT"]
     set_env_default "BUNDLE_BIN", ENV["BUNDLE_BIN"]
+    set_env_default "BUNDLE_GEMFILE", env("BUNDLE_GEMFILE") if env("BUNDLE_GEMFILE")
     set_env_default "BUNDLE_DEPLOYMENT", ENV["BUNDLE_DEPLOYMENT"] if ENV["BUNDLE_DEPLOYMENT"] # Unset on windows since we delete the Gemfile.lock
   end
 
@@ -713,7 +725,7 @@ private
 
     # we need to set BUNDLE_CONFIG and BUNDLE_GEMFILE for
     # codon since it uses bundler.
-    env_vars["BUNDLE_GEMFILE"] = "#{pwd}/Gemfile"
+    env_vars["BUNDLE_GEMFILE"] = "#{pwd}/#{gemfile_name}"
     env_vars["BUNDLE_CONFIG"] = "#{pwd}/.bundle/config"
     env_vars["NOKOGIRI_USE_SYSTEM_LIBRARIES"] = "true"
     env_vars["BUNDLE_DISABLE_VERSION_CHECK"] = "true"
