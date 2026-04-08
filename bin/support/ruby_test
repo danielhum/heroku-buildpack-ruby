@@ -45,8 +45,9 @@ Dir.chdir(build_dir)
 # This is needed here because LanguagePack::Ruby.slug_vendor_base shells out to the user's ruby binary
 user_env_hash["PATH"] = "#{build_dir}/bin:#{ENV["PATH"]}"
 
+gemfile = LanguagePack::ShellHelpers.user_env_hash["BUNDLE_GEMFILE"] || "Gemfile"
 bundler = LanguagePack::Helpers::BundlerWrapper.new(
-  gemfile_path: "#{build_dir}/Gemfile",
+  gemfile_path: "#{build_dir}/#{gemfile}",
   bundler_path: LanguagePack::Ruby.slug_vendor_base # This was previously installed by bin/support/ruby_test-compile
 )
 
